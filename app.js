@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import os from 'os';
+import osUtils from 'os-utils';
 
 const app = express();
 const server = createServer(app);
@@ -44,37 +45,15 @@ const getMemoryUsage = () => {
   };
 };
 
-const getCpuUsage = () => {
-  const cpus = os.cpus();
-  let totalIdle = 0,
-    totalTick = 0;
-
-  cpus.forEach((cpu) => {
-    for (const type in cpu.times) {
-      totalTick += cpu.times[type];
-    }
-    totalIdle += cpu.times.idle;
-  });
-
-  const idle = totalIdle / cpus.length;
-  const total = totalTick / cpus.length;
-
-  const usagePercentage = ((total - idle) / total) * 100;
-
-  return {
-    cpuUsagePercentage: usagePercentage.toFixed(2) + '%',
-  };
-};
-
 const logSystemUsage = () => {
   const memoryUsage = getMemoryUsage();
-  const cpuUsage = getCpuUsage();
 
-  console.clear();
-  console.log(`Connected clients: ${connectedClients}`);
-  console.log(`Memory Usage: ${memoryUsage.memoryUsagePercentage}`);
-  console.log(`CPU Usage: ${cpuUsage.cpuUsagePercentage}`);
+  osUtils.cpuUsage((cpuUsage) => {
+    console.clear();
+    console.log(`Connected clients: ${connectedClients}`);
+    console.log(`Memory Usage: ${memoryUsage.memoryUsagePercentage}`);
+    console.log(`CPU Usage: ${(cpuUsage * 100).toFixed(2)}%`);
+  });
 };
 
-setInterval(logSystemUsage, 1000);
-
+setInterval(logSystemUsage, 500);
